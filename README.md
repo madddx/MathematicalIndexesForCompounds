@@ -1,2 +1,2 @@
 # MathematicalIndexesForCompounds
-Math project to find various indeces of organic compounds by applying graph theory.
+Math project to find various indexes of organic compounds by applying graph theory.
