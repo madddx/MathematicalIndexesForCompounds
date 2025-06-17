@@ -221,14 +221,16 @@ def connect_hydrogens(std_in_chl_string: str, hydrogen_information_start_index: 
                 i += 1
 
             frequency = int(std_in_chl_string[frequency_start_index: i]) if len(std_in_chl_string[frequency_start_index: i]) > 0 else 1
-
+            
+            # if we only have a from element id
             if to_element_id_start_index == -1:
                 from_element = ids_and_elements[from_element_id]
                 for _ in range(frequency):
                     ith_hydrogen = Element("H")
                     from_element.add_connection(ith_hydrogen)
                     ith_hydrogen.add_connection(from_element)
-            
+
+            # if we have both from element id and to element id
             else:
                 for ith_element_id in range(from_element_id, to_element_id + 1):
                     ith_element = ids_and_elements[ith_element_id]
@@ -240,8 +242,35 @@ def connect_hydrogens(std_in_chl_string: str, hydrogen_information_start_index: 
         else:
             i += 1
 
-def parse_std_in_chl_string(std_in_chl_string: str) -> None:
+def remove_stereochemistry_information(std_in_chl_string: str) -> str:
+
+    # since we dont need information about stereochemistry to make a graph based representation of the compound, we remove it
+    # consider InChI=1S/C2H4O2/c3-1-2-4/h1-4H/b2-1+, what you see after /b is the stereochemistry information
+    # so we find 'b' and remove from the slash to the left of b until the end of the string
+    b_index = std_in_chl_string.find('b')
     
+    if b_index == -1:
+        return std_in_chl_string
+    else:
+        return std_in_chl_string[0: b_index - 1]
+
+# function to add double bonds and triple bonds (by fulfilling valency of each element)
+# dont dwell on this too much
+def materialize_double_and_triple_bonds(ids_and_elements: DefaultDict[int, Element]) -> None:
+
+    for key in ids_and_elements:
+        ith_element = ids_and_elements[key]
+        for connection in ith_element.connections:
+            effective_valency = connection.valency - connection.get_num_connections()
+            for _ in range(effective_valency):
+                ith_element.add_connection(connection)
+                connection.add_connection(ith_element)
+
+
+def parse_std_in_chl_string(std_in_chl_string: str) -> DefaultDict[int, Element]:
+    
+    std_in_chl_string = remove_stereochemistry_information(std_in_chl_string=std_in_chl_string)
+
     # chemical formula (eg: C2H6) starts after the occurence of first '/'
     chemical_formula_start_index = std_in_chl_string.find('/') + 1
 
@@ -280,4 +309,8 @@ def parse_std_in_chl_string(std_in_chl_string: str) -> None:
     hydrogen_information_start_index = connections_end_index + 2
     connect_hydrogens(std_in_chl_string, hydrogen_information_start_index, ids_and_elements)
 
+    materialize_double_and_triple_bonds(ids_and_elements=ids_and_elements)
+
     helper.print_compound(ids_and_elements)
+
+    return ids_and_elements

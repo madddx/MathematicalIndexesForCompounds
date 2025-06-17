@@ -1,4 +1,5 @@
 from __future__ import annotations
+import helper
 
 class Element:
 
@@ -10,6 +11,7 @@ class Element:
         Element.next_element_id += 1
         self.symbol = symbol
         self.connections = []
+        self.valency = helper.valency[symbol]
 
     def add_connection(self, element: Element) -> None:
         self.connections.append(element)
@@ -20,3 +22,6 @@ class Element:
         for connection in self.connections:
             print(connection.symbol, ":", connection.id, ",", end=" ")
         print("]")
+    
+    def get_num_connections(self) -> int:
+        return len(self.connections)
