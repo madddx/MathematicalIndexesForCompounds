@@ -13,4 +13,6 @@ std_in_chl_string = cs.search('ethanol')[0].inchi
 print(std_in_chl_string)
 
 ids_and_elements = parser.parse_std_in_chl_string(std_in_chl_string)
+
 print(topology.find_basic_topology(ids_and_elements=ids_and_elements))
+topology.compute_topological_indices(ids_and_elements=ids_and_elements)
