@@ -258,13 +258,29 @@ def remove_stereochemistry_information(std_in_chl_string: str) -> str:
 # dont dwell on this too much
 def materialize_double_and_triple_bonds(ids_and_elements: DefaultDict[int, Element]) -> None:
 
+    # since all elements in ids_and_elements are carbons, we can assume their valency is 4
     for key in ids_and_elements:
         ith_element = ids_and_elements[key]
-        for connection in ith_element.connections:
+        ith_element_effective_valency = ith_element.valency - ith_element.get_num_connections()
+        i = 0
+        m = ith_element.get_num_connections()
+        while ith_element_effective_valency > 0 and i < m:
+            connection = ith_element.connections[i]
             effective_valency = connection.valency - connection.get_num_connections()
             for _ in range(effective_valency):
                 ith_element.add_connection(connection)
                 connection.add_connection(ith_element)
+                ith_element_effective_valency -= 1
+            i += 1
+
+    # old code, might need later idk
+    # for key in ids_and_elements:
+    #     ith_element = ids_and_elements[key]
+    #     for connection in ith_element.connections:
+    #         effective_valency = connection.valency - connection.get_num_connections()
+    #         for _ in range(effective_valency):
+    #             ith_element.add_connection(connection)
+    #             connection.add_connection(ith_element)
 
 
 def parse_std_in_chl_string(std_in_chl_string: str) -> DefaultDict[int, Element]:
