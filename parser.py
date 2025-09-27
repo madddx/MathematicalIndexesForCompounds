@@ -30,8 +30,14 @@ def get_ids_and_elements(std_in_chl_string: str, chemical_formula_start_index: i
                     compound_string_over = True # so set the flag to true
                     break # get out of the loop since the chemical formula terminated
             symbol = std_in_chl_string[symbol_start: ith_chemical_formula_index] # splice the symbol from the original string
+            
+            if symbol not in helper.valency:
+                symbol_1 = symbol[:-1]
+                symbol_1_element = Element(symbol_1) # create element instance
+                ids_and_elements[symbol_1_element.id] = symbol_1_element # this will be useful later
+                symbol = symbol[1:]
 
-            if compound_string_over: # if compound string is over without getting to number of elements with that symbol only one element witht hat symbol exists
+            if compound_string_over: # if compound string is over without getting to number of elements with that symbol only one element witht that symbol exists
                 ith_element = Element(symbol) # create element instance
                 ids_and_elements[ith_element.id] = ith_element # this will be useful later
                 break
@@ -55,35 +61,37 @@ def get_ids_and_elements(std_in_chl_string: str, chemical_formula_start_index: i
     # return element ids and respective element instances along with at which index in the std in chl string the chemical formula section ends for use later
     return ids_and_elements, ith_chemical_formula_index
 
-def set_element_connections(connections_string: str, ids_and_elements: DefaultDict[int, Element]) -> None:
+def set_element_connections_2(connections_string: str, ids_and_elements: DefaultDict[int, Element]) -> None:
 
     n = len(connections_string)
     if n == 1:
         return
-
+    
+    # we always assume i starts at the start of a source id
     # a connection is notated as follows
-    # source_element_id(branch_element_id)next_connection_id-source_element_id...
+    # source_element_id(branch_element_id)next_source_element_id
+    # or
+    # source_element_id-next_source_element_id
 
-    # we first find the source
     i = 0
     while i < n:
-        # we will first see the source element id
-        if connections_string[i].isdigit():
+        # first find source_element_id
+        if i < n and connections_string[i].isdigit():
             source_element_id_start_index= i
             while i < n and connections_string[i].isdigit():
                 i += 1
             source_element_id = int(connections_string[source_element_id_start_index: i])
-            
+
             '''
-            source_element_id(branch_element_id)next_connection_id-source_element_id...
+            source_element_id(branch_element_id)next_source_element_id...
                              ^
                              |
                              i is currently here
 
-            now, branch_element_id and next_connection will only exist if there is a branch occuring from the source element
+            now, branch_element_id will only exist if there is a branch occuring from the source element
             if there exists no branch from source element it will look like this
 
-            source_element_id-source_element_id
+            source_element_id-next_source_element_id
                              ^
                              |
                              i is currently here
@@ -91,202 +99,174 @@ def set_element_connections(connections_string: str, ids_and_elements: DefaultDi
             so after getting source_element_id, connections_string[i] can either be = '-' or '('. lets handle these two cases
             '''
 
-            if i < n and connections_string[i] == '-': # that means one source is connected to another source, we get the element id of the next source
-                next_source_element_id_start_index = i + 1
-                next_source_element_id_digit_index = i + 1
-                while next_source_element_id_digit_index < n and connections_string[next_source_element_id_digit_index].isdigit():
-                    next_source_element_id_digit_index += 1
-                next_source_element_id = int(connections_string[next_source_element_id_start_index: next_source_element_id_digit_index])
-
-                # now that we have obtained the next element source id, we append next_source_element_id as a connecton of source_element,
-                # and source_element_id as a connection of next_source_element
-
+            if i < n and connections_string[i] == '-':
+                i += 1
+                next_source_element_start_idx = i
+                next_source_element_end_idx = i
+                while next_source_element_end_idx < n and connections_string[next_source_element_end_idx].isdigit():
+                    next_source_element_end_idx += 1
+                next_source_element_id = int(connections_string[next_source_element_start_idx: next_source_element_end_idx])
+        
                 source_element = ids_and_elements[source_element_id]
                 next_source_element = ids_and_elements[next_source_element_id]
 
                 source_element.add_connection(next_source_element)
                 next_source_element.add_connection(source_element)
-
+            
             elif i < n and connections_string[i] == '(':
                 # multiple branches can be notated as (2,3,4)
-                # however, each branch can have a connection and and of itself like (2-3,4,5)
+                # however, each branch can have a connection in and of itself like (2-3,4,5)
                 # so we recursively call the set_elements_connections function on all sub connections in the branches
                 # sub connections can be defined as the string that comes after a comma or ( and ends before a comma or )
-                # we need to end i pointing at the )
+                # we need to end i pointing after the )
 
-                while connections_string[i] != ')':
-                    if connections_string[i] == '(' or connections_string[i] == ',': # we found a sub connection
-                        i += 1
-                        sub_connection_start_index = i
-                        # we first need to find the source of the sub connection (first element id that appears in the sub connection)
-                        while connections_string[i].isdigit():
-                            i += 1
-                        sub_connection_source_element_id = int(connections_string[sub_connection_start_index: i])
-                        source_element = ids_and_elements[source_element_id]
-                        sub_connection_source_element = ids_and_elements[sub_connection_source_element_id]
+                i += 1
+                # find branch source id
+                branch_source_start_idx = i
+                while i < n and connections_string[i].isdigit():
+                    i += 1
+                branch_source_id = int(connections_string[branch_source_start_idx: i])
+                branch_source = ids_and_elements[branch_source_id]
+                source_element = ids_and_elements[source_element_id]
+                source_element.add_connection(branch_source)
+                branch_source.add_connection(source_element)
 
-                        source_element.add_connection(sub_connection_source_element)
-                        sub_connection_source_element.add_connection(source_element)
-
-                        # now we get the sub connection as a whole and send it to set elements function
-                        while connections_string[i] != ')' and connections_string[i] != ',':
-                            i += 1
-                        sub_connections_string = connections_string[sub_connection_start_index: i]
-                        set_element_connections(sub_connections_string, ids_and_elements)
-                        
-                    else:
-                        i += 1
+                sub_connection_start_idx = branch_source_start_idx
+                j = sub_connection_start_idx
+                num_open_brackets = 0
+                while True:
+                    if j < n and connections_string[j] == '(':
+                        num_open_brackets += 1
+                    elif j < n and connections_string[j] == ')' and num_open_brackets != 0:
+                        num_open_brackets -= 1
+                    elif j < n and connections_string[j] == ')' and num_open_brackets == 0:
+                        sub_connections_string = connections_string[sub_connection_start_idx: j]
+                        # print(sub_connections_string)
+                        set_element_connections_2(sub_connections_string, ids_and_elements)
+                        i = j + 1
+                        break
+                    j += 1
 
                 '''
                 now,
-                source_element_id(branch_element_id)next_connection_id-source_element_id...
-                                                   ^
-                                                   |
-                                                   i is here
+                source_element_id(branch_element_id)next_source_element_id...
+                                                    ^
+                                                    |
+                                                    i is here
                 
-                so we need to get next_connection_id now
+                so we need to get next_source_element_id now
                 '''
 
-                # increment i to go to the start of the next connection id
-                i += 1
-                next_connection_id_start = i
-                while i < n and connections_string[i].isdigit():
-                    i += 1
-                next_connection_id = int(connections_string[next_connection_id_start: i])
-
-                # we connect both elements now
+                next_source_element_start_idx = i
+                next_source_element_end_idx = i
+                while next_source_element_end_idx < n and connections_string[next_source_element_end_idx].isdigit():
+                    next_source_element_end_idx += 1
+                next_source_element_id = int(connections_string[next_source_element_start_idx: next_source_element_end_idx])
+        
                 source_element = ids_and_elements[source_element_id]
-                next_connection = ids_and_elements[next_connection_id]
+                next_source_element = ids_and_elements[next_source_element_id]
 
-                source_element.add_connection(next_connection)
-                next_connection.add_connection(source_element)
-
-                '''
-                now, we are at the '-' before the next source element
-                source_element_id(branch_element_id)next_connection_id-source_element_id...
-                                                                      ^
-                                                                      |
-                                                                      i is here
-                '''
-
-                if i < n and connections_string[i] == '-':
-                    next_source_element_id_start_index = i + 1
-                    next_source_element_id_digit_index = i + 1
-                    while next_source_element_id_digit_index < n and connections_string[next_source_element_id_digit_index].isdigit():
-                        next_source_element_id_digit_index += 1
-                    next_source_element_id = int(connections_string[next_source_element_id_start_index: next_source_element_id_digit_index])
-
-                    next_source_element = ids_and_elements[next_connection_id]
-
-                    next_connection.add_connection(next_source_element)
-                    next_source_element.add_connection(next_connection)
+                source_element.add_connection(next_source_element)
+                next_source_element.add_connection(source_element)
+        
         else:
-            i += 1
+            print("will fix later")
+            # print(i, connections_string[i], connections_string)
+            break
 
-def connect_hydrogens(std_in_chl_string: str, hydrogen_information_start_index: int, ids_and_elements: DefaultDict[int, Element]) -> None:
+def connect_hydrogens_2(std_in_chl_string: str, hydrogen_information_start_index: int, ids_and_elements: DefaultDict[int, Element]) -> None:
 
     i = hydrogen_information_start_index
     n = len(std_in_chl_string)
+
     while i < n:
-        # we found the element ids to which hydrogen is attached
-        if std_in_chl_string[i].isdigit():
-            # the ids can be notated as such: 1-4, so we need to find from_element_id and to_element_id
-            from_element_id_start_index = i
-            to_element_id_start_index = -1
-            while i < n and std_in_chl_string[i].isdigit():
-                i += 1
+        # some random ahh hydrogen connections that we don't need are notated in brackets
+        # we can safely ignore this, and also since these appear at the end of the std_in_chl_string
+        # we can break out of the loop if we see a '('
+        if std_in_chl_string[i] == '(':
+            break
             
-            from_element_id = int(std_in_chl_string[from_element_id_start_index: i])
+        # connection notations for hydrogen end at H
+        # 1-4H3 or 1,5,7H
+        # we must account for both types of notations
 
-            if i < n and std_in_chl_string[i] == '-':
-                i += 1
-                to_element_id_start_index = i
-                while i < n and std_in_chl_string[i].isdigit():
-                    i += 1
-
-                to_element_id = int(std_in_chl_string[to_element_id_start_index: i])
-
-            '''
-            1-4H3
-               ^
-               |
-               i is here
-
-            we need the frequency of hydrogen which is located next to where i is located. so increment i
-            '''
-
+        hydrogen_connection_notation_start_idx = i
+        while i < n and std_in_chl_string[i] != 'H':
             i += 1
+        hydrogen_connection_notation = std_in_chl_string[hydrogen_connection_notation_start_idx: i]
+        
+        '''
+        1-4H3 or 1,5,7H
+           ^          ^
+           |          |
+        i is here or i is here
+        '''
+
+        # now we attempt to get the 'frequency' of H, that is the number written after H
+        # if no number is written after H, then frequency = 1
+        hydrogen_frequency = 1
+
+        # increment i to now point to the frequency
+        i += 1
+
+        if i < n and std_in_chl_string[i].isdigit():
             frequency_start_index = i
             while i < n and std_in_chl_string[i].isdigit():
                 i += 1
+            hydrogen_frequency = int(std_in_chl_string[frequency_start_index: i])
 
-            frequency = int(std_in_chl_string[frequency_start_index: i]) if len(std_in_chl_string[frequency_start_index: i]) > 0 else 1
-            
-            # if we only have a from element id
-            if to_element_id_start_index == -1:
-                from_element = ids_and_elements[from_element_id]
-                for _ in range(frequency):
-                    ith_hydrogen = Element("H")
-                    from_element.add_connection(ith_hydrogen)
-                    ith_hydrogen.add_connection(from_element)
+        # now we process the connection notation string
+        # if string contains '-' then it defines a range of numbers (so split with '-' as delimiter)
+        # else we split the string with ',' as the delimiter
+        j = 0
+        m = len(hydrogen_connection_notation)
+        import re
+        ids = list(map(int, re.split('[,-]', hydrogen_connection_notation)))
+        new_ids = set()
+        delimeter_count = 0
+        visited = set()
+        while j < m:
+            if hydrogen_connection_notation[j] == ',' or hydrogen_connection_notation[j] == '-':
+                delimeter_count += 1
+            if hydrogen_connection_notation[j] == ',':
+                if ids[delimeter_count - 1] not in visited:
+                    new_ids.add(ids[delimeter_count - 1])
+            elif hydrogen_connection_notation[j] == '-':
+                id_one = ids[delimeter_count - 1]
+                id_two = ids[delimeter_count]
+                for id in range(id_one, id_two + 1):
+                    if id not in visited:
+                        new_ids.add(id)
+            j += 1
+                
+        for id in new_ids:
+            jth_element = ids_and_elements[id]
+            for k in range(hydrogen_frequency):
+                ith_hydrogen = Element("H")
+                jth_element.add_connection(ith_hydrogen)
+                ith_hydrogen.add_connection(jth_element)
+        
+        # i is now at the comma after H, so let's increment i to ignore the comma
+        i += 1
 
-            # if we have both from element id and to element id
-            else:
-                for ith_element_id in range(from_element_id, to_element_id + 1):
-                    ith_element = ids_and_elements[ith_element_id]
-                    for _ in range(frequency):
-                        _th_hydrogen = Element("H")
-                        ith_element.add_connection(_th_hydrogen)
-                        _th_hydrogen.add_connection(ith_element)
-
-        else:
-            i += 1
-
-def remove_stereochemistry_information(std_in_chl_string: str) -> str:
+def remove_unnecessary_information(std_in_chl_string: str) -> str:
 
     # since we dont need information about stereochemistry to make a graph based representation of the compound, we remove it
     # consider InChI=1S/C2H4O2/c3-1-2-4/h1-4H/b2-1+, what you see after /b is the stereochemistry information
     # so we find 'b' and remove from the slash to the left of b until the end of the string
-    b_index = std_in_chl_string.find('b')
+    h_index = std_in_chl_string.find('/h')
+    i = h_index + 1
+    n = len(std_in_chl_string)
+
+    while i < n and std_in_chl_string[i] != '/':
+        i += 1
     
-    if b_index == -1:
-        return std_in_chl_string
-    else:
-        return std_in_chl_string[0: b_index - 1]
-
-# function to add double bonds and triple bonds (by fulfilling valency of each element)
-# dont dwell on this too much
-def materialize_double_and_triple_bonds(ids_and_elements: DefaultDict[int, Element]) -> None:
-
-    # since all elements in ids_and_elements are carbons, we can assume their valency is 4
-    for key in ids_and_elements:
-        ith_element = ids_and_elements[key]
-        ith_element_effective_valency = ith_element.valency - ith_element.get_num_connections()
-        i = 0
-        m = ith_element.get_num_connections()
-        while ith_element_effective_valency > 0 and i < m:
-            connection = ith_element.connections[i]
-            effective_valency = connection.valency - connection.get_num_connections()
-            for _ in range(effective_valency):
-                ith_element.add_connection(connection)
-                connection.add_connection(ith_element)
-                ith_element_effective_valency -= 1
-            i += 1
-
-    # old code, might need later idk
-    # for key in ids_and_elements:
-    #     ith_element = ids_and_elements[key]
-    #     for connection in ith_element.connections:
-    #         effective_valency = connection.valency - connection.get_num_connections()
-    #         for _ in range(effective_valency):
-    #             ith_element.add_connection(connection)
-    #             connection.add_connection(ith_element)
-
+    return std_in_chl_string[0:i]
 
 def parse_std_in_chl_string(std_in_chl_string: str) -> DefaultDict[int, Element]:
     
-    std_in_chl_string = remove_stereochemistry_information(std_in_chl_string=std_in_chl_string)
-
+    std_in_chl_string = remove_unnecessary_information(std_in_chl_string=std_in_chl_string)
+    
     # chemical formula (eg: C2H6) starts after the occurence of first '/'
     chemical_formula_start_index = std_in_chl_string.find('/') + 1
 
@@ -309,7 +289,7 @@ def parse_std_in_chl_string(std_in_chl_string: str) -> DefaultDict[int, Element]
     connections_end_index = std_in_chl_string[connections_start_index:].find('/') + connections_start_index
 
     connections_string = std_in_chl_string[connections_start_index: connections_end_index]
-    set_element_connections(connections_string=connections_string, ids_and_elements=ids_and_elements)
+    set_element_connections_2(connections_string=connections_string, ids_and_elements=ids_and_elements)
 
     '''
     now, connections_end_index is at the slash after the connections in the std in chl string. so the connections will be notated as
@@ -323,10 +303,8 @@ def parse_std_in_chl_string(std_in_chl_string: str) -> DefaultDict[int, Element]
     '''
 
     hydrogen_information_start_index = connections_end_index + 2
-    connect_hydrogens(std_in_chl_string, hydrogen_information_start_index, ids_and_elements)
-
-    materialize_double_and_triple_bonds(ids_and_elements=ids_and_elements)
+    connect_hydrogens_2(std_in_chl_string, hydrogen_information_start_index, ids_and_elements)
 
     helper.print_compound(ids_and_elements)
 
-    return ids_and_elements
+    return ids_and_elements 
