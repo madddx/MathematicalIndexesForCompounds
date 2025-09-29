@@ -121,15 +121,22 @@ def set_element_connections_2(connections_string: str, ids_and_elements: Default
                 # we need to end i pointing after the )
 
                 i += 1
-                # find branch source id
-                branch_source_start_idx = i
-                while i < n and connections_string[i].isdigit():
-                    i += 1
-                branch_source_id = int(connections_string[branch_source_start_idx: i])
-                branch_source = ids_and_elements[branch_source_id]
-                source_element = ids_and_elements[source_element_id]
-                source_element.add_connection(branch_source)
-                branch_source.add_connection(source_element)
+
+                while True:
+                    # find branch source id
+                    branch_source_start_idx = i
+                    while i < n and connections_string[i].isdigit():
+                        i += 1
+                    branch_source_id = int(connections_string[branch_source_start_idx: i])
+                    branch_source = ids_and_elements[branch_source_id]
+                    source_element = ids_and_elements[source_element_id]
+                    source_element.add_connection(branch_source)
+                    branch_source.add_connection(source_element)
+
+                    if connections_string[i] == ',':
+                        i += 1
+                    else:
+                        break
 
                 sub_connection_start_idx = branch_source_start_idx
                 j = sub_connection_start_idx
@@ -170,9 +177,7 @@ def set_element_connections_2(connections_string: str, ids_and_elements: Default
                 next_source_element.add_connection(source_element)
         
         else:
-            print("will fix later")
-            # print(i, connections_string[i], connections_string)
-            break
+            i += 1
 
 def connect_hydrogens_2(std_in_chl_string: str, hydrogen_information_start_index: int, ids_and_elements: DefaultDict[int, Element]) -> None:
 

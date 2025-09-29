@@ -4,7 +4,7 @@ from chemspipy import ChemSpider
 
 cs = ChemSpider('k66XWXT4eY8blIm8nZprn1G7HBCqHvD4Cd0Oe0Y1')
 
-std_in_chl_string = cs.search('Rivastigmine')[0].inchi
+std_in_chl_string = cs.search('Huperzine A')[0].inchi
 print(std_in_chl_string)
 print()
 
