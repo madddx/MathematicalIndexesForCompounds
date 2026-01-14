@@ -51,7 +51,53 @@ def find_basic_topology(ids_and_elements: DefaultDict[int, Element]) -> DefaultD
     return dict(basic_topology) # return the basic topology hashmap
 
 
-def compute_topological_indices(ids_and_elements: dict[int, Element], rr_alpha: float = 1.0) -> None: 
+def dve(v: Element) -> int:
+    neighborhood = set([v] + v.connections)
+
+    edges = set()
+    for u in neighborhood:
+        for w in u.connections:
+            # if w in neighborhood:
+            edge = tuple(sorted((u.id, w.id)))
+            edges.add(edge)
+
+    return len(edges)
+
+
+# def compute_M1_beta_ve(ids_and_elements: dict[int, Element]) -> int:
+#     M1_beta_ve = 0
+
+#     # Sum over unique edges
+#     seen_edges = set()
+#     for u in ids_and_elements.values():
+#         for v in u.connections:
+#             edge = tuple(sorted((u.id, v.id)))
+#             if edge in seen_edges:
+#                 continue
+#             seen_edges.add(edge)
+
+#             M1_beta_ve += dve_map[u.id] + dve_map[v.id]
+    
+#     print(dve_map[1])
+#     print(M1_beta_ve)
+
+def compute_dve_map(ids_and_elements: dict[int, Element]) -> dict[int, int]:
+    dve_map = {}
+    start_ele = ids_and_elements[next(iter(ids_and_elements))]
+    q = deque([start_ele])
+    visited = {start_ele}
+    
+    while q:
+        ele = q.popleft()
+        dve_map[ele.id] = dve(ele)
+        for c in ele.connections:
+            if c not in visited:
+                visited.add(c)
+                q.append(c)
+                
+    return dve_map
+
+def compute_ve_topological_indices(ids_and_elements: dict[int, Element], dve_map: dict[int, int], rr_alpha: float = 1.0):
     # rr_alpha is a parameter used in calculating the Reciprocal Randić Index.
     # It defaults to 1.0 if not provided
     # None. This function only prints the calculated indices; it does not return them.
@@ -67,8 +113,8 @@ def compute_topological_indices(ids_and_elements: dict[int, Element], rr_alpha: 
             if (u.id, v.id) in visited_edges or (v.id, u.id) in visited_edges: # Skip if this edge has already been processed
                 continue
 
-            du = len(u.connections) # number of connections of node u
-            dv = len(v.connections) # number of connections of node v
+            du = dve_map[u.id]
+            dv = dve_map[v.id]
 
             M1 += (du + dv) # First Zagreb Index: M1 = Σ (du + dv)
             M2 += (du * dv) # Second Zagreb Index: M2 = Σ (du * dv)
@@ -91,7 +137,7 @@ def compute_topological_indices(ids_and_elements: dict[int, Element], rr_alpha: 
             SC += 1 / math.sqrt(du + dv) # Sum-connectivity Index: SC = Σ 1 / √(du + dv)
 
             visited_edges.add((u.id, v.id)) # Mark this edge as visited to avoid double counting
-
+            
     print("\nTopological Indices:")
     print(f"First Zagreb Index (M1): {M1}") # First Zagreb Index
     print(f"Second Zagreb Index (M2): {M2}") # Second Zagreb Index
@@ -106,3 +152,9 @@ def compute_topological_indices(ids_and_elements: dict[int, Element], rr_alpha: 
     print(f"Reciprocal Randic Index (RRalpha, alpha={rr_alpha}): {RR:.4f}") # Reciprocal Randic Index
     print(f"Atomic Bond Connectivity Index (ABC): {ABC:.4f}") # Atomic Bond Connectivity Index
     print(f"Sum-connectivity Index (SC): {SC:.4f}") # Sum-connectivity Index
+    
+    return [M1, M2, HM, H, mm2, ReZG3, F, IS, A, R, RR, ABC, SC]
+
+def compute_topological_indices_2(ids_and_elements: dict[int, Element]):
+    dve_map = compute_dve_map(ids_and_elements)
+    return compute_ve_topological_indices(ids_and_elements, dve_map)

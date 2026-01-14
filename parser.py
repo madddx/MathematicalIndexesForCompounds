@@ -308,8 +308,9 @@ def parse_std_in_chl_string(std_in_chl_string: str) -> DefaultDict[int, Element]
     '''
 
     hydrogen_information_start_index = connections_end_index + 2
-    connect_hydrogens_2(std_in_chl_string, hydrogen_information_start_index, ids_and_elements)
+    # connect_hydrogens_2(std_in_chl_string, hydrogen_information_start_index, ids_and_elements)
 
     helper.print_compound(ids_and_elements)
-
+    Element.next_element_id = 1
+    
     return ids_and_elements 
