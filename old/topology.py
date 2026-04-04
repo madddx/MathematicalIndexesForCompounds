@@ -86,7 +86,7 @@ def compute_dve_map(ids_and_elements: dict[int, Element]) -> dict[int, int]:
     start_ele = ids_and_elements[next(iter(ids_and_elements))]
     q = deque([start_ele])
     visited = {start_ele}
-    
+
     while q:
         ele = q.popleft()
         dve_map[ele.id] = dve(ele)
@@ -94,7 +94,7 @@ def compute_dve_map(ids_and_elements: dict[int, Element]) -> dict[int, int]:
             if c not in visited:
                 visited.add(c)
                 q.append(c)
-                
+
     return dve_map
 
 def compute_ve_topological_indices(ids_and_elements: dict[int, Element], dve_map: dict[int, int], rr_alpha: float = 1.0):
