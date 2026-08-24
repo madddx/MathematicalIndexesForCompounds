@@ -1,0 +1,17 @@
+key,name,smiles,mpC,csid,link,source,count,min,max,range
+15039,1H-Pyrrole,c1cccn1,-23.0,7736,http://msds.chem.ox.ac.uk/,academic website,2,-23.4,-23.0,0.399999999999999
+17145,fludioxonil,N#Cc3cncc3c1cccc2OC(F)(F)Oc12,199.4,77916,http://dx.doi.org/10.1021/ci700307p,Hughes LD; Palmer DS; Nigsch F and Mitchell JBO. 2008 Why are some properties more difficult to predict than others? A study of QSPR models of solubility; melting point and LogP. J. Chem. Inf. Model. 2008. 48 (1). pp 220?292,2,199.4,199.8,0.400000000000006
+15899,"Methyl (3beta,16beta,17alpha,18beta,20alpha)-11,17-dimethoxy-18-{[(2E)-3-(3,4,5-trimethoxyphenyl)prop-2-enoyl]oxy}yohimban-16-carboxylate",COc1cc(cc(OC)c1OC)/C=C/C(=O)O[C@@H]3C[C@@H]4CN5CCc2c6ccc(OC)cc6nc2[C@H]5C[C@@H]4[C@@H]([C@H]3OC)C(=O)OC,238.0,4444446,http://msds.chem.ox.ac.uk/,academic website,2,238.0,238.5,0.5
+15035,1H-Imidazole,c1cncn1,90.0,773,http://msds.chem.ox.ac.uk/,academic website,3,90.0,90.5,0.5
+15036,1H-Indole,c1cccc2nccc12,52.0,776,http://msds.chem.ox.ac.uk/,academic website,3,52.0,52.5,0.5
+15521,5-Methyl-1H-benzotriazole,Cc1cc2nnnc2cc1,81.5,8381,http://msds.chem.ox.ac.uk/,academic website,3,81.0,81.5,0.5
+14777,(2'beta)-22-Oxovincaleukoblastine,O=C(OC)[C@@]2(C[C@H]4C[C@@](O)(CC)C[N@@](CCc1c3ccccc3nc12)C4)c5cc9c(cc5OC)N(C=O)[C@@H]6[C@]98CCN7CC=C[C@@](CC)([C@@H](OC(C)=O)[C@]6(O)C(=O)OC)[C@H]78,219.0,5758,http://msds.chem.ox.ac.uk/,academic website,2,219.0,220.0,1.0
+15534,6-Nitro-1H-benzimidazole,[O-][N+](=O)c1ccc2ncnc2c1,208.0,6927,http://msds.chem.ox.ac.uk/,academic website,3,208.0,209.0,1.0
+15284,2-Methyl-4-nitro-1H-imidazole,[O-][N+](=O)c1cnc(C)n1,253.0,12236,http://msds.chem.ox.ac.uk/,academic website,3,252.0,253.0,1.0
+15031,1H-Benzimidazole,c1cccc2ncnc12,171.0,5593,http://msds.chem.ox.ac.uk/,academic website,4,170.5,172.0,1.5
+15383,3-Methyl-1H-indole,Cc2cnc1ccccc12,95.0,6480,http://msds.chem.ox.ac.uk/,academic website,3,95.0,97.5,2.5
+15034,1H-Benzotriazole,c1cccc2nnnc12,97.0,6950,http://msds.chem.ox.ac.uk/,academic website,3,97.0,100.0,3.0
+15984,N-Benzyl-9H-purin-6-amine,n2cnc(NCc1ccccc1)c3ncnc23,231.0,56177,http://msds.chem.ox.ac.uk/,academic website,3,231.0,234.5,3.5
+15083,"2-(1,3-Thiazol-4-yl)-1H-benzimidazole",n1c3ccccc3nc1c2cscn2,304.5,5237,http://msds.chem.ox.ac.uk/,academic website,3,300.0,304.5,4.5
+16550,L-Histidine,N[C@@H](Cc1cncn1)C(=O)O,282.0,6038,http://www.drugbank.ca/drugs/DB00117,DrugBank,2,282.0,287.0,5.0
+15032,1H-Benzimidazole-2-thiol,Sc1nc2ccccc2n1,303.0,616466,http://msds.chem.ox.ac.uk/,academic website,3,298.0,303.0,5.0
